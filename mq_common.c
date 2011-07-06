@@ -34,3 +34,16 @@ PCommand receive_command(mqd_t mq)
     }
     return (PCommand)buff;
 }
+
+
+int send_command(mqd_t mq, PCommand command)
+{
+	unsigned int prio = 10;
+	char* buff = (char*) command;
+	int ret = mq_send(mq, buff, strlen(buff), prio);
+	if (ret == -1) {
+		perror("mq_send");
+		return -1;
+	}
+	return 0;
+}

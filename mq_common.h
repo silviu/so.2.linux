@@ -1,6 +1,7 @@
 #include <mqueue.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct command {
     char name[8];
@@ -8,6 +9,6 @@ typedef struct command {
     short crypt[17];
 } Command, *PCommand;
 
-
 mqd_t open_msg_queue(char* mq_name);
 PCommand receive_command(mqd_t mq);
+int send_command(mqd_t mq, PCommand command);

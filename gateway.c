@@ -1,7 +1,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <semaphore.h>
-#include <string.h>
 #include "mq_common.h"
 
 #define MQ_NAME "/gateway"
@@ -35,19 +34,6 @@ int close_server_mqs()
 	return 0;		
 }
 
-
-
-int send_command(int server_id, PCommand command)
-{
-	unsigned int prio = 10;
-	char* buff = (char*) command;
-	int ret = mq_send(server_mqs[server_id], buff, strlen(buff), prio);
-	if (ret == -1) {
-		perror("mq_send");
-		return -1;
-	}
-	return 0;
-}
 
 int unlock_client(char* sem_name)
 {
@@ -84,7 +70,7 @@ int main(int argc, char** argv)
     	if (server_id == -1)
     		unlock_client(command->name);
     	else
-    		send_command(server_id - 1, command);
+    		send_command(server_mqs[server_id - 1], command);
     	
     	command = receive_command(mq);
     }
