@@ -5,10 +5,10 @@ all:clean server gateway
 
 server: server.c
 	@echo "Compiling sources..."
-	$(CC) $(CFLAGS) server.c -o server
+	$(CC) $(CFLAGS) server.c mq_common.c -o server
 
 gateway: gateway.c
-	$(CC) $(CFLAGS) gateway.c -o gateway
+	$(CC) $(CFLAGS) gateway.c mq_common.c -o gateway
 	@echo "------------------------------"
 
 test: clean server gateway

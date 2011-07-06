@@ -1,43 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <semaphore.h>
-#include <mqueue.h>
 #include <string.h>
+#include "mq_common.h"
 
 #define MQ_NAME "/gateway"
 #define NUM_SERVERS 4
 mqd_t server_mqs[NUM_SERVERS];
-
-typedef struct command {
-    char name[8];
-    int dim;
-    short crypt[17];
-} Command, *PCommand;
-
-mqd_t open_msg_queue(char* mq_name)
-{
-    // unlink the message queue to be sure it is created
-    mq_unlink(mq_name);
-    
-    // initialize mq_attr stucture
-	struct mq_attr attr;
-    attr.mq_flags = 0;
-    attr.mq_maxmsg = 100;
-    attr.mq_msgsize = 49;
-    attr.mq_curmsgs = 0;
-
-    
-    // open message queue
-    mqd_t ret = mq_open(mq_name, O_CREAT | O_RDWR, 0666, &attr);
-    if (ret == (mqd_t)-1) {
-    	fprintf(stderr, "%s\n", mq_name);
-        perror("mq_open!!!");
-        return (mqd_t)-1;
-    }
-    return ret;
-}
 
 int open_server_mqs()
 {
@@ -66,17 +35,7 @@ int close_server_mqs()
 	return 0;		
 }
 
-PCommand receive_command(mqd_t mq)
-{
-    unsigned int prio = 10;
-    char* buff = (char*) malloc(100);
-    int ret = mq_receive(mq, buff, 100, &prio);
-    if (ret == -1) {
-    	perror("mq_receive");
-    	return NULL;
-    }
-    return (PCommand)buff;
-}
+
 
 int send_command(int server_id, PCommand command)
 {
@@ -117,9 +76,10 @@ int main(int argc, char** argv)
     open_server_mqs();
     
     PCommand command = receive_command(mq);
+    int server_id = command->crypt[0];
     while(strcmp(command->name, "exit") != 0) {
     	printf("NAME=%s\n", command->name);
-    	int server_id = command->crypt[0];
+    	server_id = command->crypt[0];
     	// if there are no more actions to take
     	if (server_id == -1)
     		unlock_client(command->name);
@@ -128,6 +88,9 @@ int main(int argc, char** argv)
     	
     	command = receive_command(mq);
     }
+    // send the exit command to the servers
+    send_command(server_id - 1, command);
+    
     close_server_mqs();
     mq_close(mq);
     return 0;
