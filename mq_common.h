@@ -10,5 +10,6 @@ typedef struct command {
 } Command, *PCommand;
 
 mqd_t open_msg_queue(char* mq_name);
-PCommand receive_command(mqd_t mq);
+mqd_t create_msg_queue(char* mq_name);
+int receive_command(mqd_t mq, Command *cmd);
 int send_command(mqd_t mq, PCommand command);
