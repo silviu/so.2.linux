@@ -1,12 +1,5 @@
 #include "mq_common.h"
 
-mqd_t create_msg_queue(char* mq_name)
-{
-	// unlink the message queue to be sure it is created
-    //mq_unlink(mq_name);
-    return open_msg_queue(mq_name);
-}
-
 mqd_t open_msg_queue(char* mq_name)
 {
     // initialize mq_attr stucture

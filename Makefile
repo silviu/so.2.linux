@@ -1,5 +1,7 @@
 CC = gcc
-CFLAGS = -Wall -g -lrt 
+CFLAGS = -Wall -g -lrt
+ 
+build: all
 
 all:clean server gateway
 

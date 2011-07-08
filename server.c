@@ -21,9 +21,9 @@ static void* open_shared_memory(char* shm_name, int shm_size, int* shm_fd)
 		return NULL;
 	}
 	
-	void* mem = mmap(0, shm_size, PROT_WRITE | PROT_READ, MAP_SHARED, *shm_fd, 0);
+	void* mem = mmap(0, shm_size, PROT_WRITE | PROT_READ, 
+					 MAP_SHARED, *shm_fd, 0);
 	if (mem == MAP_FAILED) {
-		//TODO shm close
 		int rc = close(*shm_fd);
 		if (rc == -1) {
 			perror("close");
@@ -61,7 +61,6 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Too few arguments given to server.\n./server N\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("Server is up.\n");
 	
 	int server_id = atoi(argv[1]);
 	pdecryptf_t decrypt = choose_decryption(server_id);
@@ -70,17 +69,12 @@ int main(int argc, char** argv)
 	sprintf(mq_name, "/mq_server_%d", server_id);
 	mqd_t mq = open_msg_queue(mq_name);
 	
-	printf("SERVER_ID = %d\n", server_id-1);
-	printf("SERVER MQ NAME = %s\n", mq_name);
-	
 	Command cmd;
     int ret = receive_command(mq, &cmd);
     if (ret == -1)
     	exit(EXIT_FAILURE);
     Command *command = &cmd;
 	
-	printf("NAME=%s\n", command->name);
-	fflush(stdout);
 	mqd_t ret_mq;
 	while(strcmp(command->name, "exit") != 0) {
 		
@@ -90,7 +84,6 @@ int main(int argc, char** argv)
 		int shm_fd;
 		void* mem = open_shared_memory(shm_name, shm_size, &shm_fd);
 		if (mem == NULL) {
-			fprintf(stderr, "<<<<<CRITICAL>>>>Server %d is down.\n", server_id);
 			exit(EXIT_FAILURE);
 		}
 		
@@ -102,7 +95,6 @@ int main(int argc, char** argv)
 		// decrypt message
 		void* out = malloc(1000);
 		int decrypt_size = decrypt(mem+sizeof(int), dim_message, out);
-		printf("DECRYPT_SIZE=%d\n", decrypt_size);
 		
 		// copy result back in shared memory
 		memcpy(mem, &decrypt_size, sizeof(int));
@@ -127,7 +119,6 @@ int main(int argc, char** argv)
     		exit(EXIT_FAILURE);
 	}
 	mq_close(mq);
-	//mq_unlink(mq_name);
 	mq_close(ret_mq);
     return 0;
 }
